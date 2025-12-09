@@ -1,0 +1,73 @@
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --- CONSTANT REPO ROOT ------------------------------------------------------
+REPO_DIR="$HOME/git/pc-config"
+
+if [[ ! -d "$REPO_DIR" ]]; then
+  echo "Repo directory does not exist: $REPO_DIR"
+  exit 1
+fi
+
+# --- CONFIG MAPPINGS ---------------------------------------------------------
+# Format:
+#   ["source_path"]="relative_destination_path"
+#
+# Destinations are relative to $REPO_DIR
+
+declare -A FILES_TO_SYNC=(
+  ["$HOME/scripts"]="scripts"
+  ["$HOME/.tmux.conf"]="tmux/.tmux.conf"
+  ["$HOME/.config/tmux"]="tmux/config"
+  ["$HOME/.zshrc"]=".zshrc"
+  ["$HOME/.config/opencode"]="opencode"
+  ["$HOME/.config/fastfetch"]="fastfetch"
+  ["$HOME/.config/ghostty"]="ghostty"
+  ["$HOME/.art"]=".art"
+  ["$HOME/.config/oh-my-posh"]="oh-my-posh"
+)
+
+# --- LOGGING -----------------------------------------------------------------
+
+log() {
+  echo -e "\033[1;32m[+] $1\033[0m"
+}
+
+warn() {
+  echo -e "\033[1;33m[!] $1\033[0m"
+}
+
+err() {
+  echo -e "\033[1;31m[✗] $1\033[0m"
+}
+
+# --- SYNC LOGIC --------------------------------------------------------------
+
+log "Syncing configs into: $REPO_DIR"
+echo
+
+for SRC in "${!FILES_TO_SYNC[@]}"; do
+  DEST_REL="${FILES_TO_SYNC[$SRC]}"
+  DEST="$REPO_DIR/$DEST_REL"
+
+  if [[ ! -e "$SRC" ]]; then
+    warn "Source does not exist: $SRC — skipping."
+    continue
+  fi
+
+  log "→ $SRC → $DEST"
+
+  mkdir -p "$(dirname "$DEST")"
+
+  if [[ -d "$SRC" ]]; then
+    # Directory: mirror contents
+    rsync -avh --delete "$SRC/" "$DEST/"
+  else
+    # Single file: copy file to destination
+    rsync -avh "$SRC" "$DEST"
+  fi
+done
+
+echo
+log "Done."

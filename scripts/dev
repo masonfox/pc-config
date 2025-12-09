@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+BASE_DIR="$HOME/git"
+
+# If user passed a project name argument
+if [ -n "$1" ]; then
+  ARG="$1"
+
+  # 1. Try exact match (case-insensitive)
+  PROJECT_DIR=$(find "$BASE_DIR" \
+    -maxdepth 1 -mindepth 1 -type d \
+    -iname "$ARG" -print -quit)
+
+  # 2. If no exact match, try partial match (case-insensitive)
+  if [ -z "$PROJECT_DIR" ]; then
+    PROJECT_DIR=$(find "$BASE_DIR" \
+      -maxdepth 1 -mindepth 1 -type d |
+      grep -i "$ARG" |
+      head -n 1)
+  fi
+
+  # 3. If STILL no match, fall back to fzf
+  if [ -z "$PROJECT_DIR" ]; then
+    PROJECT_DIR=$(find "$BASE_DIR" \
+      -maxdepth 1 -mindepth 1 -type d |
+      fzf --query="$ARG" --prompt="Select project: ")
+  fi
+else
+  # No argument → use fzf selector
+  PROJECT_DIR=$(find "$BASE_DIR" \
+    -maxdepth 1 -mindepth 1 -type d |
+    fzf --prompt="Select project: ")
+fi
+
+# If still empty somehow, bail
+[ -z "$PROJECT_DIR" ] && exit 0
+
+SESSION=$(basename "$PROJECT_DIR")
+
+# If session exists → attach
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  tmux attach -t "$SESSION"
+  exit 0
+fi
+
+# Create new session
+tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n editor
+tmux send-keys -t "$SESSION:0" "vim ." C-m
+
+tmux new-window -t "$SESSION" -n opencode -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION:1" "opencode" C-m
+
+tmux new-window -t "$SESSION" -n git -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION:2" "lazygit" C-m
+
+tmux new-window -t "$SESSION" -n dev -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION:3" "bun run dev" C-m
+
+tmux new-window -t "$SESSION" -n extra -c "$PROJECT_DIR"
+
+tmux select-window -t "$SESSION:0"
+tmux attach -t "$SESSION"

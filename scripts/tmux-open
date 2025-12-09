@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# Fetch session names
+sessions=$(tmux list-sessions -F '#S' 2>/dev/null)
+
+# --- No sessions ---
+if [[ -z "$sessions" ]]; then
+  echo "No tmux sessions found."
+  read -r -p "Create new session? (y/N): " ans
+  if [[ "$ans" =~ ^[Yy]$ ]]; then
+    read -r -p "Enter new session name: " name
+    exec tmux new -s "$name"
+  fi
+  exit 0
+fi
+
+# --- One session ---
+if [[ $(echo "$sessions" | wc -l) -eq 1 ]]; then
+  s=$(echo "$sessions")
+  echo "Attaching to $s..."
+  exec tmux attach -t "$s"
+fi
+
+# --- Multiple sessions ---
+mapfile -t arr <<<"$sessions"
+
+echo "Select a tmux session:"
+i=1
+for s in "${arr[@]}"; do
+  echo "  $i) $s"
+  ((i++))
+done
+echo "  0) Cancel"
+
+read -r -p "> " choice
+
+# Cancel on 0
+if [[ "$choice" == "0" ]]; then
+  echo "Cancelled."
+  exit 0
+fi
+
+# Validate + attach
+index=$((choice - 1))
+if [[ $index -ge 0 && $index -lt ${#arr[@]} ]]; then
+  exec tmux attach -t "${arr[$index]}"
+else
+  echo "Invalid selection."
+  exit 1
+fi

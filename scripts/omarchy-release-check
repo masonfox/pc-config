@@ -1,0 +1,32 @@
+
+#!/usr/bin/env bash
+
+# Get local version and normalize to match GitHub format
+raw_local_ver=$(omarchy-version 2>/dev/null)
+local_ver="v${raw_local_ver}"
+
+# Fetch latest release tag
+latest=$(curl -s https://api.github.com/repos/basecamp/omarchy/releases/latest \
+  | grep -Po '"tag_name": "\K.*?(?=")' )
+
+# Colors
+green="\e[32m"
+yellow="\e[33m"
+red="\e[31m"
+reset="\e[0m"
+gray="\e[90m"
+
+# If offline or GitHub limit/etc.
+if [[ -z "$latest" ]]; then
+  echo -e "${gray}latest unknown${reset}"
+  exit 0
+fi
+
+# Match = fully up to date (as far as GitHub releases go)
+if [[ "$local_ver" == "$latest" ]]; then
+  echo -e "${green}✔  $latest${reset}"
+  exit 0
+fi
+
+# New release exists
+echo -e "${yellow}⬆  $latest (you: $local_ver)${reset}"
