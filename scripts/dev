@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+#
+# dev — helper script to launch a tmux development workspace for a project.
+#
+# What it does:
+#   - Let’s you pick (or pass) a project directory under ~/git.
+#   - Opens a new (or attaches to existing) tmux session named after the project.
+#   - In that session it:
+#       • Opens an editor (vim) in the project root
+#       • Opens a window running “opencode” in the project root (if configured)
+#       • Opens a window running “lazygit” for Git navigation
+#       • Opens a split terminal window running a dev server (via “npm run dev”),
+#         plus a second pane for commands — all rooted in the project directory
+#
+# How to use:
+#   1. Place this script somewhere in your PATH and make it executable (chmod +x).
+#   2. Call it with an argument: `dev my-project-name` — it will try to match exactly or partially a directory under ~/git.
+#   3. Or call without arguments: `dev` — it will pop up a fuzzy finder (fzf) to select a project.
+#   4. If a tmux session for that project exists, it attaches you to it; otherwise it creates a fresh session with all windows/panes configured.
+#
+# Assumptions / prerequisites:
+#   - You keep your projects under ~/git (or adjust BASE_DIR)
+#   - You have tmux, fzf, vim (or your editor), lazygit, and dev-server tooling (e.g. npm) installed.
+#   - For workflows relying on “opencode” or “npm run dev” those commands must be valid in the project root.
 
 BASE_DIR="$HOME/git"
 
