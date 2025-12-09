@@ -45,18 +45,26 @@ fi
 
 # Create new session
 tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n editor
+
+# Open vim on directory
 tmux send-keys -t "$SESSION:0" "vim ." C-m
 
+# Open opencode
 tmux new-window -t "$SESSION" -n opencode -c "$PROJECT_DIR"
 tmux send-keys -t "$SESSION:1" "opencode" C-m
 
+# Open lazygit
 tmux new-window -t "$SESSION" -n git -c "$PROJECT_DIR"
 tmux send-keys -t "$SESSION:2" "lazygit" C-m
 
-tmux new-window -t "$SESSION" -n dev -c "$PROJECT_DIR"
-tmux send-keys -t "$SESSION:3" "bun run dev" C-m
+# Create a combined terminal window with two panes
+tmux new-window -t "$SESSION" -n terminal -c "$PROJECT_DIR"
 
-tmux new-window -t "$SESSION" -n extra -c "$PROJECT_DIR"
+# Left pane → run dev server
+tmux send-keys -t "$SESSION:3.0" "npm run dev" C-m
+
+# Split vertically for right pane (empty)
+tmux split-window -h -t "$SESSION:3" -c "$PROJECT_DIR"
 
 tmux select-window -t "$SESSION:0"
 tmux attach -t "$SESSION"
