@@ -25,68 +25,82 @@
 
 BASE_DIR="$HOME/git"
 
-# If user passed a project name argument
+# ---------------------------
+# PROJECT PICKER
+# ---------------------------
+
 if [ -n "$1" ]; then
   ARG="$1"
 
-  # 1. Try exact match (case-insensitive)
-  PROJECT_DIR=$(find "$BASE_DIR" \
-    -maxdepth 1 -mindepth 1 -type d \
-    -iname "$ARG" -print -quit)
+  PROJECT_DIR=$(find "$BASE_DIR" -maxdepth 1 -mindepth 1 -type d -iname "$ARG" -print -quit)
 
-  # 2. If no exact match, try partial match (case-insensitive)
   if [ -z "$PROJECT_DIR" ]; then
-    PROJECT_DIR=$(find "$BASE_DIR" \
-      -maxdepth 1 -mindepth 1 -type d |
-      grep -i "$ARG" |
-      head -n 1)
+    PROJECT_DIR=$(find "$BASE_DIR" -maxdepth 1 -mindepth 1 -type d | grep -i "$ARG" | head -n 1)
   fi
 
-  # 3. If STILL no match, fall back to fzf
   if [ -z "$PROJECT_DIR" ]; then
-    PROJECT_DIR=$(find "$BASE_DIR" \
-      -maxdepth 1 -mindepth 1 -type d |
+    PROJECT_DIR=$(find "$BASE_DIR" -maxdepth 1 -mindepth 1 -type d |
       fzf --query="$ARG" --prompt="Select project: ")
   fi
+
 else
-  # No argument → use fzf selector
-  PROJECT_DIR=$(find "$BASE_DIR" \
-    -maxdepth 1 -mindepth 1 -type d |
+  PROJECT_DIR=$(find "$BASE_DIR" -maxdepth 1 -mindepth 1 -type d |
     fzf --prompt="Select project: ")
 fi
 
-# If still empty somehow, bail
 [ -z "$PROJECT_DIR" ] && exit 0
 
 SESSION=$(basename "$PROJECT_DIR")
 
-# If session exists → attach
+# ---------------------------
+# ATTACH IF SESSION EXISTS (NO PROMPTS)
+# ---------------------------
+
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   tmux attach -t "$SESSION"
   exit 0
 fi
 
-# Create new session
-tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n editor
+# ---------------------------
+# SINCE WE'RE CREATING NEW SESSION → ASK FOR AGENT
+# ---------------------------
 
-# Open vim on directory
+CHOICE=$(printf "claude\nopencode" | fzf --prompt="Which AI session? ")
+
+if [ -z "$CHOICE" ]; then
+  echo "Cancelled."
+  exit 0
+fi
+
+if [ "$CHOICE" = "claude" ]; then
+  AGENT_CMD="claude"
+else
+  AGENT_CMD="opencode"
+fi
+
+# ---------------------------
+# CREATE NEW SESSION WINDOWS
+# ---------------------------
+
+# Window 0 — editor
+tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n editor
 tmux send-keys -t "$SESSION:0" "vim ." C-m
 
-# Open opencode
-tmux new-window -t "$SESSION" -n opencode -c "$PROJECT_DIR"
-tmux send-keys -t "$SESSION:1" "opencode" C-m
+# Window 1 — AI agent (Claude or Opencode)
+tmux new-window -t "$SESSION" -n ai -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION:1" "$AGENT_CMD" C-m
 
-# Open lazygit
+# Window 2 — Git
 tmux new-window -t "$SESSION" -n git -c "$PROJECT_DIR"
 tmux send-keys -t "$SESSION:2" "lazygit" C-m
 
-# Create a combined terminal window with two panes
+# Window 3 — Terminal (split panes)
 tmux new-window -t "$SESSION" -n terminal -c "$PROJECT_DIR"
 
-# Left pane → run dev server
-tmux send-keys -t "$SESSION:3.0" "npm run dev" C-m
+# Left pane → dev server
+tmux send-keys -t "$SESSION:3.0" "bun run dev" C-m
 
-# Split vertically for right pane (empty)
+# Right pane → empty shell in same dir
 tmux split-window -h -t "$SESSION:3" -c "$PROJECT_DIR"
 
 tmux select-window -t "$SESSION:0"
