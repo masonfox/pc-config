@@ -62,10 +62,10 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
 fi
 
 # ---------------------------
-# SINCE WE'RE CREATING NEW SESSION → ASK FOR AGENT
+# ASK FOR AGENT
 # ---------------------------
 
-CHOICE=$(printf "claude\nopencode" | fzf --prompt="Which AI session? ")
+CHOICE=$(printf "opencode\nclaude" | fzf --prompt="Which AI session? ")
 
 if [ -z "$CHOICE" ]; then
   echo "Cancelled."
@@ -102,6 +102,10 @@ tmux send-keys -t "$SESSION:3.0" "bun run dev" C-m
 
 # Right pane → empty shell in same dir
 tmux split-window -h -t "$SESSION:3" -c "$PROJECT_DIR"
+
+# Window 4 — Sqlit / https://github.com/Maxteabag/sqlit
+tmux new-window -t "$SESSION" -n db -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION:4" "sqlit" C-m
 
 tmux select-window -t "$SESSION:0"
 tmux attach -t "$SESSION"
