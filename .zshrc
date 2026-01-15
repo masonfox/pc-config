@@ -75,6 +75,8 @@ export PATH="$HOME/.local/bin:$PATH"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
+DISABLE_AUTO_TITLE="true"
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
