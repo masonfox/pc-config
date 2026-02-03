@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print colored messages
+info() {
+  echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+error() {
+  echo -e "${RED}[ERROR]${NC} $1"
+}
+
+warn() {
+  echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+# Mount points
+DOCKER_MOUNT="/mnt/foxnas-docker"
+NVME_MOUNT="/mnt/foxnas-nvme"
+
+# Create mount points if they don't exist
+info "Creating mount points..."
+sudo mkdir -p "$DOCKER_MOUNT"
+sudo mkdir -p "$NVME_MOUNT"
+
+# Mount NFS shares
+info "Mounting NFS shares..."
+if mountpoint -q "$DOCKER_MOUNT"; then
+  info "$DOCKER_MOUNT already mounted"
+else
+  sudo mount -t nfs foxnas-v2.local:/volume3/docker "$DOCKER_MOUNT"
+  info "Mounted foxnas-v2.local:/volume3/docker to $DOCKER_MOUNT"
+fi
+
+if mountpoint -q "$NVME_MOUNT"; then
+  info "$NVME_MOUNT already mounted"
+else
+  sudo mount -t nfs foxnas-v2.local:/volume3/nvme "$NVME_MOUNT"
+  info "Mounted foxnas-v2.local:/volume3/nvme to $NVME_MOUNT"
+fi
+
+# Prompt user for sync choice
+echo ""
+echo "What would you like to sync?"
+echo "1) Calibre"
+echo "2) Tome"
+echo "3) Both"
+echo ""
+read -p "Enter your choice (1-3): " choice
+
+case $choice in
+1)
+  info "Syncing Calibre..."
+  rsync -av --delete "$NVME_MOUNT/ebooks/" /home/mason/Calibre/prod-copy/
+  info "Calibre sync complete!"
+  ;;
+2)
+  info "Syncing Tome..."
+  rsync -av "$DOCKER_MOUNT/tome/nightly/data/" /home/mason/git/tome/data/
+  info "Tome sync complete!"
+  ;;
+3)
+  info "Syncing both Calibre and Tome..."
+
+  info "Syncing Calibre..."
+  rsync -av --delete "$NVME_MOUNT/ebooks/" /home/mason/Calibre/prod-copy/
+
+  info "Syncing Tome..."
+  rsync -av "$DOCKER_MOUNT/tome/nightly/data/" /home/mason/git/tome/data/
+
+  info "All syncs complete!"
+  ;;
+*)
+  error "Invalid choice. Exiting."
+  exit 1
+  ;;
+esac
+
+info "Done!"
