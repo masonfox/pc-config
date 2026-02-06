@@ -120,6 +120,8 @@ eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/theme.json)"
 
 ### Package management shortcuts ###
 alias pacman="sudo pacman"
+alias update="pacman -S"
+alias upgrade="pacman -Syu"
 
 ### General system ###
 alias refresh='source ~/.zshrc'
