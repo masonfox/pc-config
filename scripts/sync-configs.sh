@@ -1,6 +1,5 @@
-
 #!/usr/bin/env bash
-set -euo pipefail
+# set -euo pipefail
 
 # --- CONSTANT REPO ROOT ------------------------------------------------------
 REPO_DIR="$HOME/git/pc-config"
@@ -21,7 +20,7 @@ declare -A FILES_TO_SYNC=(
   ["$HOME/.tmux.conf"]="tmux/.tmux.conf"
   ["$HOME/.config/tmux"]="tmux/config"
   ["$HOME/.zshrc"]=".zshrc"
-  ["$HOME/.config/opencode"]="opencode"
+  ["$HOME/.opencode"]="opencode"
   ["$HOME/.config/fastfetch"]="fastfetch"
   ["$HOME/.config/ghostty"]="ghostty"
   ["$HOME/.art"]=".art"

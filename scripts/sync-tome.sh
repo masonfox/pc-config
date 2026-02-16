@@ -25,16 +25,15 @@ warn() {
 DOCKER_MOUNT="/mnt/foxnas-docker"
 NVME_MOUNT="/mnt/foxnas-nvme"
 
-# Create mount points if they don't exist
-info "Creating mount points..."
-sudo mkdir -p "$DOCKER_MOUNT"
-sudo mkdir -p "$NVME_MOUNT"
-
 # Mount NFS shares
-info "Mounting NFS shares..."
+info "Checking NFS mounts..."
+
+# Check if already mounted, if not create mount point and mount
 if mountpoint -q "$DOCKER_MOUNT"; then
   info "$DOCKER_MOUNT already mounted"
 else
+  info "Creating mount point and mounting $DOCKER_MOUNT..."
+  sudo mkdir -p "$DOCKER_MOUNT"
   sudo mount -t nfs foxnas-v2.local:/volume3/docker "$DOCKER_MOUNT"
   info "Mounted foxnas-v2.local:/volume3/docker to $DOCKER_MOUNT"
 fi
@@ -42,6 +41,8 @@ fi
 if mountpoint -q "$NVME_MOUNT"; then
   info "$NVME_MOUNT already mounted"
 else
+  info "Creating mount point and mounting $NVME_MOUNT..."
+  sudo mkdir -p "$NVME_MOUNT"
   sudo mount -t nfs foxnas-v2.local:/volume3/nvme "$NVME_MOUNT"
   info "Mounted foxnas-v2.local:/volume3/nvme to $NVME_MOUNT"
 fi
@@ -49,13 +50,13 @@ fi
 # Sync functions
 sync_calibre() {
   info "Syncing Calibre..."
-  rsync -av --delete --exclude='.caltrash/' "$NVME_MOUNT/ebooks/" /home/mason/Calibre/prod-copy/
+  rsync -av --delete --exclude='.caltrash/' "$NVME_MOUNT/ebooks/" /home/masonfox/Calibre/prod-copy/
   info "Calibre sync complete!"
 }
 
 sync_tome() {
   info "Syncing Tome..."
-  rsync -av --exclude='backups/' --exclude='*.zip' "$DOCKER_MOUNT/tome/nightly/" /home/mason/git/tome/data/
+  rsync -av --exclude='backups/' --exclude='*.zip' "$DOCKER_MOUNT/tome/nightly/" /home/masonfox/git/tome/data/
   info "Tome sync complete!"
 }
 

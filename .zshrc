@@ -119,9 +119,13 @@ eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/theme.json)"
 # cat ~/.art
 
 ### Package management shortcuts ###
-alias pacman="sudo pacman"
-alias update="pacman -S"
-alias upgrade="pacman -Syu"
+alias apt="sudo apt"
+alias search="apt search"
+alias install="apt install"
+alias remove="apt remove"
+alias autoremove="apt autoremove"
+alias update="apt update"
+alias upgrade="apt upgrade"
 
 ### General system ###
 alias refresh='source ~/.zshrc'
@@ -129,6 +133,7 @@ alias copy='xclip -selection clipboard <'
 alias tmux-open='~/scripts/tmux-open'
 alias mosh-wipe='pgrep mosh-server -u $(whoami) | xargs kill'
 alias kill-name='pkill -9'
+alias bat='batcat'
 
 ### Development ###
 alias nah='git reset --hard && git clean -f -d'
@@ -172,3 +177,6 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # scripts directory
 export PATH="$HOME/scripts:$PATH"
+
+# opencode
+export PATH=/home/masonfox/.opencode/bin:$PATH
