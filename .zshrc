@@ -159,6 +159,7 @@ alias docker-reset='docker stop $(docker ps -q) && docker rm -f $(docker ps -aq)
 alias vim='nvim'
 alias vi='nvim'
 alias emacs='emacsclient -c'
+alias copilot='gh copilot'
 
 ### NAS ###
 alias ssh-nas='ssh masonfox@foxnas-v2.local -p 22'
