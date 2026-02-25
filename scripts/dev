@@ -65,7 +65,7 @@ fi
 # ASK FOR AGENT
 # ---------------------------
 
-CHOICE=$(printf "opencode\nclaude" | fzf --prompt="Which AI session? ")
+CHOICE=$(printf "opencode\nclaude\ncopilot" | fzf --prompt="Which AI session? ")
 
 if [ -z "$CHOICE" ]; then
   echo "Cancelled."
@@ -74,6 +74,8 @@ fi
 
 if [ "$CHOICE" = "claude" ]; then
   AGENT_CMD="claude"
+elif [ "$CHOICE" = "copilot" ]; then
+  AGENT_CMD="gh copilot"
 else
   AGENT_CMD="opencode"
 fi
